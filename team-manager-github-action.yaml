@@ -10,9 +10,9 @@ jobs:
   sync:
     # if: github.repository == '<my-org>/<my-repo>'
     name: Team sync
-    runs-on: latest
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@v2
       - uses: docker://quay.io/cilium/team-manager:v1.0.0
         name: Sync team
         with:

@@ -74,7 +74,47 @@ var createTeamCmd = &cobra.Command{
 	Use:   "create-team",
 	Short: "Create a new team on GitHub and update team-assignments.yaml",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// This is a placeholder for the actual implementation
+		// Implementation for creating a new GitHub team and updating team-assignments.yaml
+		teamName, _ := cmd.Flags().GetString("name")
+		description, _ := cmd.Flags().GetString("description")
+		privacy, _ := cmd.Flags().GetString("privacy")
+		parentTeam, _ := cmd.Flags().GetString("parent-team")
+
+		ghClient, err := github.NewClientFromEnv()
+		if err != nil {
+			return fmt.Errorf("failed to create github client: %w", err)
+		}
+
+		// Create the new team on GitHub
+		newTeam, _, err := ghClient.Teams.CreateTeamBySlug(context.Background(), orgName, gh.NewTeam{
+			Name:        teamName,
+			Description: &description,
+			Privacy:     &privacy,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create new team on GitHub: %w", err)
+		}
+
+		// Load the current configuration
+		cfg, err := persistence.LoadState(configFilename)
+		if err != nil {
+			return fmt.Errorf("failed to load local state: %w", err)
+		}
+
+		// Update the configuration with the new team
+		cfg.Teams[teamName] = &config.TeamConfig{
+			ID:          newTeam.GetNodeID(),
+			RESTID:      newTeam.GetID(),
+			Description: description,
+			Privacy:     config.ParsePrivacyFromREST(newTeam.GetPrivacy()),
+			ParentTeam:  config.TeamOrMemberName(parentTeam),
+		}
+
+		// Save the updated configuration
+		if err = persistence.StoreState(configFilename, cfg); err != nil {
+			return fmt.Errorf("failed to store updated state to config: %w", err)
+		}
+
 		return nil
 	},
 }
