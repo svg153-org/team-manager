@@ -1,0 +1,43 @@
+name: Create Team
+description: Request the creation of a new GitHub team.
+title: "Team Creation: [Team Name]"
+labels: ["team creation"]
+assignees: []
+body:
+  - type: input
+    id: team-name
+    attributes:
+      label: Team Name
+      description: Name of the team to be created.
+      placeholder: e.g., Awesome Team
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A brief description of the team's purpose and responsibilities.
+      placeholder: e.g., This team is responsible for...
+    validations:
+      required: true
+  - type: dropdown
+    id: privacy
+    attributes:
+      label: Privacy
+      description: The visibility of the team within the organization.
+      options:
+        - secret
+        - closed
+    validations:
+      required: true
+  - type: input
+    id: parent-team
+    attributes:
+      label: Parent Team (Optional)
+      description: The parent team of the new team, if any.
+      placeholder: e.g., Parent Team Name
+    validations:
+      required: false
+  - type: submit
+    attributes:
+      label: Create Team

@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+  issues:
+    types: [opened, labeled]
 
 jobs:
   sync:
@@ -20,3 +22,45 @@ jobs:
           args: push --force --repositories=false --members=false --config-filename ./team-assignments.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.ADMIN_ORG_TOKEN }}
+  create-team:
+    if: github.event.label.name == 'team creation'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Read issue content
+        id: issue-content
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const issueBody = context.payload.issue.body;
+            core.setOutput("issue-body", issueBody);
+      - name: Create team and modify team-assignments.yaml
+        run: |
+          ./team-manager push create-team --name ${{ fromJson(steps.issue-content.outputs.issue-body).team-name }} --description ${{ fromJson(steps.issue-content.outputs.issue-body).description }} --privacy ${{ fromJson(steps.issue-content.outputs.issue-body).privacy }} --parent-team ${{ fromJson(steps.issue-content.outputs.issue-body).parent-team }}
+      - name: Create Pull Request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: Update team-assignments.yaml
+          title: 'New Team Creation: ${{ fromJson(steps.issue-content.outputs.issue-body).team-name }}'
+          body: |
+            Updates team-assignments.yaml to include the new team.
+            Closes #${{ github.event.issue.number }}
+          branch: feature/new-team-${{ fromJson(steps.issue-content.outputs.issue-body).team-name }}
+      - name: Link PR to Issue
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `Team created successfully. See PR #${{ steps.create-pr.outputs.pull-request-number }}`
+            });
+            github.issues.update({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed'
+            });

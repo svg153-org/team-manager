@@ -19,6 +19,7 @@ import (
 func init() {
 	rootCmd.AddCommand(addTeamsCmd)
 	rootCmd.AddCommand(setTeamsUsersCmd)
+	rootCmd.AddCommand(createTeamCmd)
 }
 
 var addTeamsCmd = &cobra.Command{
@@ -65,6 +66,15 @@ var setTeamsUsersCmd = &cobra.Command{
 			return fmt.Errorf("failed to store state to config: %w", err)
 		}
 
+		return nil
+	},
+}
+
+var createTeamCmd = &cobra.Command{
+	Use:   "create-team",
+	Short: "Create a new team on GitHub and update team-assignments.yaml",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// This is a placeholder for the actual implementation
 		return nil
 	},
 }
