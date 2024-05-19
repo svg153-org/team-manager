@@ -16,3 +16,10 @@ local: team-manager
 
 clean:
 	rm -fr team-manager
+
+test:
+	go test -v ./... -cover
+
+coverage:
+	go test ./... -coverprofile=coverage.out
+	go tool cover -func=coverage.out
